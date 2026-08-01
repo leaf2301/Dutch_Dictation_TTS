@@ -161,13 +161,12 @@ def synthesize():
 
     text = clean_text_for_tts(raw_text)
 
-    title_slug = get_safe_title(raw_text)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    folder_name = f"{title_slug}_{timestamp}"
+    folder_name = f"lesson_{timestamp}"
     folder_path = os.path.join(SOURCES_DIR, folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
-    audio_filename = f"{title_slug}.mp3"
+    audio_filename = "audio.mp3"
     audio_path = os.path.join(folder_path, audio_filename)
 
     word_boundaries = []
@@ -198,6 +197,17 @@ def synthesize():
                 "duration": wb["duration"] / 10_000_000,
             }
         )
+
+    metadata = {
+        "text": raw_text,
+        "voice": voice,
+        "word_boundaries": boundaries_sec,
+    }
+    try:
+        with open(os.path.join(folder_path, "metadata.json"), "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Could not save metadata.json: {e}")
 
     return jsonify(
         {
@@ -373,5 +383,121 @@ def api_settings():
     return jsonify(load_settings())
 
 
+@app.route("/api/save-progress", methods=["POST"])
+def api_save_progress():
+    data = request.get_json() or {}
+    folder_name = data.get("folder_name", "").strip()
+
+    if not folder_name:
+        return jsonify({"error": "Missing folder_name"}), 400
+
+    target_folder = os.path.join(SOURCES_DIR, folder_name)
+    if not os.path.exists(target_folder):
+        return jsonify({"error": f"Folder {folder_name} does not exist"}), 404
+
+    progress_file = os.path.join(target_folder, "progress.json")
+    progress_data = {
+        "folder_name": folder_name,
+        "raw_text": data.get("raw_text", ""),
+        "voice": data.get("voice", ""),
+        "hidden_pct": data.get("hidden_pct", 100),
+        "pace": data.get("pace", 1.0),
+        "audio_time": data.get("audio_time", 0),
+        "user_inputs": data.get("user_inputs", {}),
+        "last_saved_at": datetime.now().isoformat(),
+    }
+
+    try:
+        with open(progress_file, "w", encoding="utf-8") as f:
+            json.dump(progress_data, f, indent=2, ensure_ascii=False)
+
+        safe_resume_param = urllib.parse.quote(folder_name)
+        cmd_path = os.path.join(target_folder, "continue.command")
+        cmd_content = f"""#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+APP_DIR="$(cd "$SCRIPT_DIR/../../" && pwd)"
+cd "$APP_DIR"
+
+export PORT=5011
+
+if [ -x "$APP_DIR/.venv/bin/python" ]; then
+    PY="$APP_DIR/.venv/bin/python"
+elif [ -x "$APP_DIR/venv/bin/python" ]; then
+    PY="$APP_DIR/venv/bin/python"
+elif [ -x "$APP_DIR/.venv/bin/python3" ]; then
+    PY="$APP_DIR/.venv/bin/python3"
+elif [ -x "/opt/homebrew/bin/python3" ]; then
+    PY="/opt/homebrew/bin/python3"
+elif [ -x "/usr/local/bin/python3" ]; then
+    PY="/usr/local/bin/python3"
+else
+    PY="python3"
+fi
+
+lsof -ti:$PORT | xargs kill -9 2>/dev/null
+sleep 0.5
+
+(sleep 2.0 && open "http://127.0.0.1:$PORT/?resume={safe_resume_param}") &
+exec "$PY" app.py
+"""
+        with open(cmd_path, "w", encoding="utf-8") as f:
+            f.write(cmd_content)
+
+        try:
+            os.chmod(cmd_path, 0o755)
+        except Exception:
+            pass
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Progress saved successfully",
+                "folder_name": folder_name,
+                "cmd_path": cmd_path,
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": f"Failed to save progress: {e}"}), 500
+
+
+@app.route("/api/resume-progress", methods=["GET"])
+def api_resume_progress():
+    folder_name = request.args.get("folder", "").strip()
+    if not folder_name:
+        return jsonify({"error": "Missing folder query parameter"}), 400
+
+    target_folder = os.path.join(SOURCES_DIR, folder_name)
+    if not os.path.exists(target_folder):
+        return jsonify({"error": f"Folder {folder_name} not found"}), 404
+
+    progress_file = os.path.join(target_folder, "progress.json")
+    metadata_file = os.path.join(target_folder, "metadata.json")
+
+    if not os.path.exists(progress_file):
+        return jsonify({"error": "No saved progress found for this lesson"}), 404
+
+    try:
+        with open(progress_file, "r", encoding="utf-8") as f:
+            progress_data = json.load(f)
+
+        metadata_data = {}
+        if os.path.exists(metadata_file):
+            with open(metadata_file, "r", encoding="utf-8") as f:
+                metadata_data = json.load(f)
+
+        return jsonify(
+            {
+                "success": True,
+                "progress": progress_data,
+                "metadata": metadata_data,
+                "audio_url": f"/api/audio/{folder_name}/audio.mp3",
+                "folder_name": folder_name,
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": f"Error loading progress: {e}"}), 500
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    run_port = int(os.environ.get("PORT", 5001))
+    app.run(debug=True, port=run_port)

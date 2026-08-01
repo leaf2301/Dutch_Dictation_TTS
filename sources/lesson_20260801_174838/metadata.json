@@ -1,0 +1,526 @@
+{
+  "text": "Mijn naam is Thomas en ik woon in een klein appartement in Utrecht. Elke ochtend sta ik om zeven uur op. Eerst drink ik een kop koffie en eet ik brood met kaas. Daarna fiets ik naar mijn werk. Ik werk in een boekwinkel in het centrum van de stad. Mijn collega’s zijn vriendelijk en we praten vaak over boeken en films. Tijdens de lunch wandel ik soms langs de grachten. Na het werk ga ik naar huis en maak ik avondeten. ’s Avonds lees ik, luister ik naar muziek of bel ik met mijn vrienden. In het weekend bezoek ik graag mijn familie.",
+  "voice": "nl-NL-ColetteNeural",
+  "word_boundaries": [
+    {
+      "text": "Mijn",
+      "start": 0.1,
+      "duration": 0.35
+    },
+    {
+      "text": "naam",
+      "start": 0.45,
+      "duration": 0.3375
+    },
+    {
+      "text": "is",
+      "start": 0.8,
+      "duration": 0.175
+    },
+    {
+      "text": "Thomas",
+      "start": 0.975,
+      "duration": 0.575
+    },
+    {
+      "text": "en",
+      "start": 1.6125,
+      "duration": 0.1125
+    },
+    {
+      "text": "ik",
+      "start": 1.7875,
+      "duration": 0.1125
+    },
+    {
+      "text": "woon",
+      "start": 1.9125,
+      "duration": 0.3125
+    },
+    {
+      "text": "in",
+      "start": 2.25,
+      "duration": 0.125
+    },
+    {
+      "text": "een",
+      "start": 2.4,
+      "duration": 0.0875
+    },
+    {
+      "text": "klein",
+      "start": 2.5125,
+      "duration": 0.3875
+    },
+    {
+      "text": "appartement",
+      "start": 2.925,
+      "duration": 0.65
+    },
+    {
+      "text": "in",
+      "start": 3.65,
+      "duration": 0.1125
+    },
+    {
+      "text": "Utrecht",
+      "start": 3.775,
+      "duration": 0.5
+    },
+    {
+      "text": "Elke",
+      "start": 5.3,
+      "duration": 0.275
+    },
+    {
+      "text": "ochtend",
+      "start": 5.6,
+      "duration": 0.5
+    },
+    {
+      "text": "sta",
+      "start": 6.1125,
+      "duration": 0.3375
+    },
+    {
+      "text": "ik",
+      "start": 6.5,
+      "duration": 0.1375
+    },
+    {
+      "text": "om",
+      "start": 6.6625,
+      "duration": 0.15
+    },
+    {
+      "text": "zeven",
+      "start": 6.8125,
+      "duration": 0.45
+    },
+    {
+      "text": "uur",
+      "start": 7.275,
+      "duration": 0.175
+    },
+    {
+      "text": "op",
+      "start": 7.525,
+      "duration": 0.1875
+    },
+    {
+      "text": "Eerst",
+      "start": 8.725,
+      "duration": 0.3625
+    },
+    {
+      "text": "drink",
+      "start": 9.1125,
+      "duration": 0.325
+    },
+    {
+      "text": "ik",
+      "start": 9.5,
+      "duration": 0.1375
+    },
+    {
+      "text": "een",
+      "start": 9.6375,
+      "duration": 0.1125
+    },
+    {
+      "text": "kop",
+      "start": 9.75,
+      "duration": 0.2375
+    },
+    {
+      "text": "koffie",
+      "start": 10.0125,
+      "duration": 0.425
+    },
+    {
+      "text": "en",
+      "start": 10.5375,
+      "duration": 0.1375
+    },
+    {
+      "text": "eet",
+      "start": 10.7375,
+      "duration": 0.25
+    },
+    {
+      "text": "ik",
+      "start": 11.0,
+      "duration": 0.1375
+    },
+    {
+      "text": "brood",
+      "start": 11.15,
+      "duration": 0.3875
+    },
+    {
+      "text": "met",
+      "start": 11.575,
+      "duration": 0.175
+    },
+    {
+      "text": "kaas",
+      "start": 11.75,
+      "duration": 0.4875
+    },
+    {
+      "text": "Daarna",
+      "start": 13.1875,
+      "duration": 0.525
+    },
+    {
+      "text": "fiets",
+      "start": 13.725,
+      "duration": 0.3875
+    },
+    {
+      "text": "ik",
+      "start": 14.125,
+      "duration": 0.125
+    },
+    {
+      "text": "naar",
+      "start": 14.2625,
+      "duration": 0.15
+    },
+    {
+      "text": "mijn",
+      "start": 14.4125,
+      "duration": 0.275
+    },
+    {
+      "text": "werk",
+      "start": 14.6875,
+      "duration": 0.35
+    },
+    {
+      "text": "Ik",
+      "start": 16.05,
+      "duration": 0.1
+    },
+    {
+      "text": "werk",
+      "start": 16.2375,
+      "duration": 0.35
+    },
+    {
+      "text": "in",
+      "start": 16.6375,
+      "duration": 0.15
+    },
+    {
+      "text": "een",
+      "start": 16.7875,
+      "duration": 0.075
+    },
+    {
+      "text": "boekwinkel",
+      "start": 16.8625,
+      "duration": 0.65
+    },
+    {
+      "text": "in",
+      "start": 17.6125,
+      "duration": 0.1125
+    },
+    {
+      "text": "het",
+      "start": 17.7375,
+      "duration": 0.0875
+    },
+    {
+      "text": "centrum",
+      "start": 17.825,
+      "duration": 0.5
+    },
+    {
+      "text": "van",
+      "start": 18.325,
+      "duration": 0.175
+    },
+    {
+      "text": "de",
+      "start": 18.5,
+      "duration": 0.05
+    },
+    {
+      "text": "stad",
+      "start": 18.55,
+      "duration": 0.3375
+    },
+    {
+      "text": "Mijn",
+      "start": 19.9375,
+      "duration": 0.2875
+    },
+    {
+      "text": "collega’s",
+      "start": 20.2375,
+      "duration": 0.825
+    },
+    {
+      "text": "zijn",
+      "start": 21.15,
+      "duration": 0.1875
+    },
+    {
+      "text": "vriendelijk",
+      "start": 21.3375,
+      "duration": 0.625
+    },
+    {
+      "text": "en",
+      "start": 22.0375,
+      "duration": 0.0875
+    },
+    {
+      "text": "we",
+      "start": 22.175,
+      "duration": 0.0875
+    },
+    {
+      "text": "praten",
+      "start": 22.275,
+      "duration": 0.4375
+    },
+    {
+      "text": "vaak",
+      "start": 22.7125,
+      "duration": 0.35
+    },
+    {
+      "text": "over",
+      "start": 23.075,
+      "duration": 0.2625
+    },
+    {
+      "text": "boeken",
+      "start": 23.3375,
+      "duration": 0.425
+    },
+    {
+      "text": "en",
+      "start": 23.9375,
+      "duration": 0.0625
+    },
+    {
+      "text": "films",
+      "start": 24.0,
+      "duration": 0.6
+    },
+    {
+      "text": "Tijdens",
+      "start": 25.525,
+      "duration": 0.5
+    },
+    {
+      "text": "de",
+      "start": 26.025,
+      "duration": 0.1
+    },
+    {
+      "text": "lunch",
+      "start": 26.125,
+      "duration": 0.3875
+    },
+    {
+      "text": "wandel",
+      "start": 26.525,
+      "duration": 0.35
+    },
+    {
+      "text": "ik",
+      "start": 26.9125,
+      "duration": 0.1375
+    },
+    {
+      "text": "soms",
+      "start": 27.05,
+      "duration": 0.4125
+    },
+    {
+      "text": "langs",
+      "start": 27.5125,
+      "duration": 0.3
+    },
+    {
+      "text": "de",
+      "start": 27.8125,
+      "duration": 0.075
+    },
+    {
+      "text": "grachten",
+      "start": 27.8875,
+      "duration": 0.475
+    },
+    {
+      "text": "Na",
+      "start": 29.3375,
+      "duration": 0.2625
+    },
+    {
+      "text": "het",
+      "start": 29.65,
+      "duration": 0.15
+    },
+    {
+      "text": "werk",
+      "start": 29.8,
+      "duration": 0.325
+    },
+    {
+      "text": "ga",
+      "start": 30.15,
+      "duration": 0.25
+    },
+    {
+      "text": "ik",
+      "start": 30.425,
+      "duration": 0.125
+    },
+    {
+      "text": "naar",
+      "start": 30.5625,
+      "duration": 0.1625
+    },
+    {
+      "text": "huis",
+      "start": 30.725,
+      "duration": 0.4625
+    },
+    {
+      "text": "en",
+      "start": 31.2375,
+      "duration": 0.0875
+    },
+    {
+      "text": "maak",
+      "start": 31.375,
+      "duration": 0.3125
+    },
+    {
+      "text": "ik",
+      "start": 31.7125,
+      "duration": 0.125
+    },
+    {
+      "text": "avondeten",
+      "start": 31.85,
+      "duration": 0.7625
+    },
+    {
+      "text": "s",
+      "start": 33.5875,
+      "duration": 0.1375
+    },
+    {
+      "text": "Avonds",
+      "start": 33.825,
+      "duration": 0.5625
+    },
+    {
+      "text": "lees",
+      "start": 34.4,
+      "duration": 0.3
+    },
+    {
+      "text": "ik",
+      "start": 34.7125,
+      "duration": 0.175
+    },
+    {
+      "text": "luister",
+      "start": 35.225,
+      "duration": 0.4875
+    },
+    {
+      "text": "ik",
+      "start": 35.75,
+      "duration": 0.1375
+    },
+    {
+      "text": "naar",
+      "start": 35.9,
+      "duration": 0.1375
+    },
+    {
+      "text": "muziek",
+      "start": 36.0375,
+      "duration": 0.425
+    },
+    {
+      "text": "of",
+      "start": 36.5875,
+      "duration": 0.1625
+    },
+    {
+      "text": "bel",
+      "start": 36.7625,
+      "duration": 0.3
+    },
+    {
+      "text": "ik",
+      "start": 37.075,
+      "duration": 0.1625
+    },
+    {
+      "text": "met",
+      "start": 37.25,
+      "duration": 0.175
+    },
+    {
+      "text": "mijn",
+      "start": 37.425,
+      "duration": 0.2
+    },
+    {
+      "text": "vrienden",
+      "start": 37.625,
+      "duration": 0.45
+    },
+    {
+      "text": "In",
+      "start": 39.0375,
+      "duration": 0.1
+    },
+    {
+      "text": "het",
+      "start": 39.2,
+      "duration": 0.1
+    },
+    {
+      "text": "weekend",
+      "start": 39.3125,
+      "duration": 0.4875
+    },
+    {
+      "text": "bezoek",
+      "start": 39.85,
+      "duration": 0.35
+    },
+    {
+      "text": "ik",
+      "start": 40.25,
+      "duration": 0.1375
+    },
+    {
+      "text": "graag",
+      "start": 40.3875,
+      "duration": 0.3625
+    },
+    {
+      "text": "mijn",
+      "start": 40.7625,
+      "duration": 0.225
+    },
+    {
+      "text": "familie",
+      "start": 40.9875,
+      "duration": 0.5
+    }
+  ]
+}

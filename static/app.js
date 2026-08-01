@@ -309,32 +309,38 @@ function toggleTracking() {
 document.addEventListener("keydown", (e) => {
   const isInput = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable;
 
-  // ~ or ` (Backquote key above Tab) → toggle tracking words visibility
-  if ((e.key === "`" || e.key === "~" || e.code === "Backquote") && !isInput) {
+  // ~ or ` (Backquote key above Tab) → ALWAYS toggle tracking words visibility & prevent text input
+  if (e.key === "`" || e.key === "~" || e.code === "Backquote" || e.keyCode === 192 || e.key === "·" || e.key === "｀" || e.key === "～") {
     e.preventDefault();
     toggleTracking();
     return;
   }
 
-  // Space → play/pause (when not typing in text inputs)
-  if ((e.key === " " || e.code === "Space") && !isInput) {
+  // Shift → ALWAYS play/pause for Dutch TTS
+  if (e.key === "Shift" || e.code === "ShiftLeft" || e.code === "ShiftRight") {
     e.preventDefault();
     togglePlay();
     return;
   }
 
-  // ArrowLeft → backward skip
-  if (e.key === "ArrowLeft" && !isInput) {
+  // ArrowLeft → ALWAYS backward skip
+  if (e.key === "ArrowLeft") {
     e.preventDefault();
     doBackward();
     return;
   }
 
-  // ArrowRight → forward skip
-  if (e.key === "ArrowRight" && !isInput) {
+  // ArrowRight → ALWAYS forward skip
+  if (e.key === "ArrowRight") {
     e.preventDefault();
     doForward();
     return;
+  }
+});
+
+document.addEventListener("beforeinput", (e) => {
+  if (e.data && (e.data.includes("`") || e.data.includes("~") || e.data.includes("·") || e.data.includes("｀") || e.data.includes("～"))) {
+    e.preventDefault();
   }
 });
 
@@ -377,6 +383,12 @@ function cleanTextForTTS(text) {
     .replace(/\n{2,}/g, "\n")
     .replace(/[ \t]+/g, " ")
     .trim();
+}
+
+function tokenizeLine(line) {
+  const pattern = /[a-zA-Z0-9'’]+|[^\s\a-zA-Z0-9'’]+/g;
+  const matches = line.match(pattern) || [];
+  return matches;
 }
 
 /**
@@ -426,7 +438,7 @@ function buildDictation(text) {
 
   rawLines.forEach((rawLine) => {
     const cleanedLine = cleanTextForTTS(rawLine);
-    const wordsInLine = cleanedLine.split(/\s+/).filter(Boolean);
+    const wordsInLine = tokenizeLine(cleanedLine);
     if (wordsInLine.length === 0) return;
 
     if (dictationGrid.children.length > 0) {
@@ -435,91 +447,105 @@ function buildDictation(text) {
       dictationGrid.appendChild(lineBreak);
     }
 
-    const hiddenSet = determineHiddenIndices(wordsInLine, hiddenPct);
+    const wordTokens = wordsInLine.filter((w) => !/^[^\s\a-zA-Z0-9'’]+$/.test(w));
+    const hiddenSet = determineHiddenIndices(wordTokens, hiddenPct);
+    let wordIdxInLine = 0;
 
-    wordsInLine.forEach((word, wIdx) => {
-      const i = wordCounter++;
-      originalWords.push(word);
-
-      const isHidden = hiddenSet.has(wIdx);
-      const box = document.createElement("div");
-      box.className = "word-box" + (isHidden ? "" : " unhidden");
-
-      if (isHidden) {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.dataset.index = i;
-        input.dataset.answer = word;
-        const charW = Math.max(word.length * 0.65 + 1.5, 3.5);
-        input.style.width = charW + "em";
-        input.autocomplete = "off";
-        input.spellcheck = false;
-
-        const badge = document.createElement("div");
-        badge.className = "word-badge";
-
-        box.appendChild(input);
-        box.appendChild(badge);
-
-        // Key handlers
-        input.addEventListener("keydown", (e) => {
-          if (e.key === " " || e.key === "Enter") {
-            e.preventDefault();
-            handleAdvance(input, i);
-          }
-          if (e.key === "Backspace" && input.value === "" && i > 0) {
-            e.preventDefault();
-            const inputs = Array.from(dictationGrid.querySelectorAll("input"));
-            let prevInput = null;
-            inputs.forEach((inp) => {
-              if (parseInt(inp.dataset.index, 10) < i) prevInput = inp;
-            });
-            if (prevInput) {
-              prevInput.focus();
-              prevInput.setSelectionRange(prevInput.value.length, prevInput.value.length);
-            }
-          }
-          if (e.key === "Tab") {
-            e.preventDefault();
-            const inputs = Array.from(dictationGrid.querySelectorAll("input"));
-            const currentPos = inputs.indexOf(input);
-            const nextPos = e.shiftKey ? currentPos - 1 : currentPos + 1;
-            if (nextPos >= 0 && nextPos < inputs.length) inputs[nextPos].focus();
-          }
-        });
-
-        // Clear state when user focuses missing input
-        input.addEventListener("focus", () => {
-          if (input.classList.contains("missing")) {
-            input.placeholder = "";
-            input.classList.remove("missing");
-          }
-        });
-
-        // Live feedback: clear check state when user modifies
-        input.addEventListener("input", () => {
-          box.removeAttribute("data-tooltip");
-          if (isChecked) {
-            input.placeholder = "";
-            input.classList.remove("correct", "incorrect", "missing");
-            box.querySelector(".word-badge").textContent = "";
-            box.querySelector(".word-badge").className = "word-badge";
-          }
-        });
+    wordsInLine.forEach((word) => {
+      const isPunct = /^[^\s\a-zA-Z0-9'’]+$/.test(word);
+      if (isPunct) {
+        const punctSpan = document.createElement("span");
+        punctSpan.className = "dictation-punct";
+        punctSpan.textContent = word;
+        dictationGrid.appendChild(punctSpan);
       } else {
-        // Unhidden hint word with matching dummy badge for perfect vertical alignment
-        const unhiddenSpan = document.createElement("div");
-        unhiddenSpan.className = "unhidden-word";
-        unhiddenSpan.textContent = word;
+        const wIdx = wordIdxInLine++;
+        const i = wordCounter++;
+        originalWords.push(word);
 
-        const dummyBadge = document.createElement("div");
-        dummyBadge.className = "word-badge";
+        const isHidden = hiddenSet.has(wIdx);
+        const box = document.createElement("div");
+        box.className = "word-box" + (isHidden ? "" : " unhidden");
 
-        box.appendChild(unhiddenSpan);
-        box.appendChild(dummyBadge);
+        if (isHidden) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.dataset.index = i;
+          input.dataset.answer = word;
+          const charW = Math.max(word.length * 0.65 + 1.5, 3.5);
+          input.style.width = charW + "em";
+          input.autocomplete = "off";
+          input.spellcheck = false;
+
+          const badge = document.createElement("div");
+          badge.className = "word-badge";
+
+          box.appendChild(input);
+          box.appendChild(badge);
+
+          // Key handlers
+          input.addEventListener("keydown", (e) => {
+            if (e.key === " " || e.key === "Enter") {
+              e.preventDefault();
+              handleAdvance(input, i);
+            }
+            if (e.key === "Backspace" && input.value === "" && i > 0) {
+              e.preventDefault();
+              const inputs = Array.from(dictationGrid.querySelectorAll("input"));
+              let prevInput = null;
+              inputs.forEach((inp) => {
+                if (parseInt(inp.dataset.index, 10) < i) prevInput = inp;
+              });
+              if (prevInput) {
+                prevInput.focus();
+                prevInput.setSelectionRange(prevInput.value.length, prevInput.value.length);
+              }
+            }
+            if (e.key === "Tab") {
+              e.preventDefault();
+              const inputs = Array.from(dictationGrid.querySelectorAll("input"));
+              const currentPos = inputs.indexOf(input);
+              const nextPos = e.shiftKey ? currentPos - 1 : currentPos + 1;
+              if (nextPos >= 0 && nextPos < inputs.length) inputs[nextPos].focus();
+            }
+          });
+
+          // Clear state when user focuses missing input
+          input.addEventListener("focus", () => {
+            if (input.classList.contains("missing")) {
+              input.placeholder = "";
+              input.classList.remove("missing");
+            }
+          });
+
+          // Live feedback: clear check state when user modifies
+          input.addEventListener("input", () => {
+            if (/[\`~·｀～]/.test(input.value)) {
+              input.value = input.value.replace(/[`~·｀～]/g, "");
+            }
+            box.removeAttribute("data-tooltip");
+            if (isChecked) {
+              input.placeholder = "";
+              input.classList.remove("correct", "incorrect", "missing");
+              box.querySelector(".word-badge").textContent = "";
+              box.querySelector(".word-badge").className = "word-badge";
+            }
+          });
+        } else {
+          // Unhidden hint word with matching dummy badge for perfect vertical alignment
+          const unhiddenSpan = document.createElement("div");
+          unhiddenSpan.className = "unhidden-word";
+          unhiddenSpan.textContent = word;
+
+          const dummyBadge = document.createElement("div");
+          dummyBadge.className = "word-badge";
+
+          box.appendChild(unhiddenSpan);
+          box.appendChild(dummyBadge);
+        }
+
+        dictationGrid.appendChild(box);
       }
-
-      dictationGrid.appendChild(box);
     });
   });
 
@@ -933,6 +959,137 @@ async function saveSetting(partial) {
   } catch (e) {}
 }
 
+/* ── Save Progress & Resume Feature ───────────────────────── */
+const btnSaveProgress = document.getElementById("btnSaveProgress");
+if (btnSaveProgress) {
+  btnSaveProgress.addEventListener("click", async () => {
+    if (!currentFolderName) {
+      alert("No active lesson to save!");
+      return;
+    }
+
+    const inputsObj = {};
+    const inputs = dictationGrid.querySelectorAll("input");
+    inputs.forEach((input) => {
+      inputsObj[input.dataset.index] = input.value;
+    });
+
+    try {
+      btnSaveProgress.disabled = true;
+      btnSaveProgress.textContent = "Saving…";
+
+      const res = await fetch("/api/save-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          folder_name: currentFolderName,
+          raw_text: currentRawText,
+          voice: voiceSelect ? voiceSelect.value : "",
+          hidden_pct: pctSelect ? parseInt(pctSelect.value, 10) : 100,
+          pace: speedSlider ? parseFloat(speedSlider.value) : 1.0,
+          audio_time: audioEl ? audioEl.currentTime : 0,
+          user_inputs: inputsObj,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save progress");
+
+      setStatus("Progress saved! Local resume script 'continue.command' generated in sources/" + currentFolderName);
+      alert("Progress saved successfully!\n\nYou can double-click 'continue.command' inside the lesson folder at any time to resume offline.");
+    } catch (err) {
+      alert("Error saving progress: " + err.message);
+    } finally {
+      btnSaveProgress.disabled = false;
+      btnSaveProgress.textContent = "💾 Save Progress";
+    }
+  });
+}
+
+async function checkResumeParam() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const resumeFolder = urlParams.get("resume");
+  if (!resumeFolder) return;
+
+  setStatus("Resuming lesson: " + resumeFolder + "…");
+  try {
+    const res = await fetch(`/api/resume-progress?folder=${encodeURIComponent(resumeFolder)}`);
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to load progress");
+    }
+
+    const data = await res.json();
+    const progress = data.progress || {};
+    const metadata = data.metadata || {};
+
+    currentFolderName = data.folder_name || resumeFolder;
+    currentRawText = progress.raw_text || metadata.text || "";
+    textInput.value = currentRawText;
+
+    if (progress.voice && voiceSelect) voiceSelect.value = progress.voice;
+    if (metadata.word_boundaries) wordBoundaries = metadata.word_boundaries;
+
+    audioEl.src = data.audio_url;
+    audioEl.load();
+
+    if (progress.pace && speedSlider) {
+      const pace = parseFloat(progress.pace);
+      speedSlider.value = pace;
+      const formatted = pace.toFixed(1) + "×";
+      if (speedToggle) speedToggle.textContent = formatted;
+      if (speedVal) speedVal.textContent = formatted;
+      audioEl.playbackRate = pace;
+    }
+
+    if (progress.hidden_pct && pctSelect) {
+      pctSelect.value = progress.hidden_pct;
+    }
+
+    buildTrackingWords();
+    buildDictation(currentRawText);
+
+    if (progress.user_inputs) {
+      const inputs = dictationGrid.querySelectorAll("input");
+      inputs.forEach((input) => {
+        const idx = input.dataset.index;
+        if (progress.user_inputs[idx] !== undefined) {
+          input.value = progress.user_inputs[idx];
+        }
+      });
+    }
+
+    if (progress.audio_time) {
+      const targetTime = parseFloat(progress.audio_time);
+      const setAudioTime = () => {
+        if (targetTime > 0 && targetTime < audioEl.duration) {
+          audioEl.currentTime = targetTime;
+        }
+      };
+      if (audioEl.readyState >= 1) {
+        setAudioTime();
+      } else {
+        audioEl.addEventListener("loadedmetadata", setAudioTime, { once: true });
+      }
+    }
+
+    trackingSection.classList.add("visible");
+    audioBar.classList.add("visible");
+    dictationSection.classList.add("visible");
+    if (btnApplyPct) btnApplyPct.disabled = false;
+    if (pctSelect) pctSelect.disabled = false;
+
+    setStatus("Lesson resumed! All typed answers and audio position restored.");
+  } catch (err) {
+    setStatus("Error resuming lesson: " + err.message, true);
+  }
+}
+
 /* ── Init ────────────────────────────────────────────────── */
-loadVoices();
-loadInitialSettings();
+async function init() {
+  await loadVoices();
+  await loadInitialSettings();
+  await checkResumeParam();
+}
+
+init();
