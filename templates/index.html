@@ -97,17 +97,16 @@
         </div>
         <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
         <div class="speed-dropdown">
-          <button class="speed-toggle" id="speedToggle" title="Playback speed">1×</button>
+          <button class="speed-toggle" id="speedToggle" title="Playback speed">1.0×</button>
           <div class="speed-menu" id="speedMenu">
-            <button class="speed-opt" data-speed="0.5">0.5×</button>
-            <button class="speed-opt" data-speed="0.75">0.75×</button>
-            <button class="speed-opt active" data-speed="1">1×</button>
-            <button class="speed-opt" data-speed="1.25">1.25×</button>
-            <button class="speed-opt" data-speed="1.5">1.5×</button>
+            <div class="speed-slider-container">
+              <span class="speed-val" id="speedVal">1.0×</span>
+              <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.1" value="1.0" class="speed-slider" />
+            </div>
           </div>
         </div>
       </div>
-      <div class="audio-hint">Shift = Play/Pause · ← → Skip</div>
+      <div class="audio-hint">Space = Play/Pause · ` / ~ = Toggle Track · ← → Skip</div>
     </div>
   </div>
 

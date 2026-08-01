@@ -15,6 +15,36 @@ app = Flask(__name__, static_folder="static")
 
 SOURCES_DIR = os.path.join(os.path.dirname(__file__), "sources")
 os.makedirs(SOURCES_DIR, exist_ok=True)
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
+
+DEFAULT_SETTINGS = {
+    "hidden_pct": 100,
+    "backward_sec": 3,
+    "forward_sec": 10,
+    "pace": 1.0,
+}
+
+def load_settings() -> dict:
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                settings = DEFAULT_SETTINGS.copy()
+                settings.update(data)
+                return settings
+        except Exception:
+            pass
+    return DEFAULT_SETTINGS.copy()
+
+def save_settings(new_settings: dict) -> dict:
+    settings = load_settings()
+    settings.update(new_settings)
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error saving settings: {e}")
+    return settings
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "dict.db")
 
@@ -332,6 +362,15 @@ def save_vocab_to_file():
         "filepath": file_path,
         "message": f"Successfully saved {len(words)} word(s) to local file."
     })
+
+
+@app.route("/api/settings", methods=["GET", "POST"])
+def api_settings():
+    if request.method == "POST":
+        data = request.get_json() or {}
+        updated = save_settings(data)
+        return jsonify(updated)
+    return jsonify(load_settings())
 
 
 if __name__ == "__main__":

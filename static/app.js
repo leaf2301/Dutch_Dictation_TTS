@@ -110,31 +110,75 @@ let lastActiveIndex = -1;
 
 function buildTrackingWords() {
   lastActiveIndex = -1;
-  trackingWords.innerHTML = '<span class="track-word active">…</span>';
+  trackingWords.innerHTML = "";
+
+  if (wordBoundaries && wordBoundaries.length > 0) {
+    wordBoundaries.forEach((wb, idx) => {
+      const span = document.createElement("span");
+      span.className = "track-word";
+      span.dataset.idx = idx;
+      span.textContent = wb.text;
+      span.style.display = "none";
+      trackingWords.appendChild(span);
+    });
+  } else {
+    trackingWords.innerHTML = '<span class="track-word active">…</span>';
+  }
+
+  trackingWords.scrollTop = 0;
   trackingWords.classList.toggle("hidden", trackingHidden);
   const btnHideTrack = document.getElementById("btnHideTrack");
   if (btnHideTrack) btnHideTrack.textContent = trackingHidden ? "👁 Show" : "👁 Hide";
 }
 
 function updateTracking() {
+  if (!wordBoundaries || wordBoundaries.length === 0) return;
+
   const time = audioEl.currentTime;
   let activeIdx = -1;
 
   for (let i = 0; i < wordBoundaries.length; i++) {
     const wb = wordBoundaries[i];
-    if (time >= wb.start && time <= wb.start + wb.duration) {
+    if (time >= wb.start) {
       activeIdx = i;
+    } else {
       break;
     }
   }
 
   if (activeIdx !== lastActiveIndex) {
     lastActiveIndex = activeIdx;
-    if (activeIdx >= 0 && wordBoundaries[activeIdx]) {
-      trackingWords.innerHTML = `<span class="track-word active">${wordBoundaries[activeIdx].text}</span>`;
-    } else {
-      trackingWords.innerHTML = `<span class="track-word">…</span>`;
-    }
+    const wordSpans = trackingWords.querySelectorAll(".track-word");
+
+    wordSpans.forEach((span, idx) => {
+      if (idx < activeIdx) {
+        span.className = "track-word past";
+        span.style.display = "inline-block";
+      } else if (idx === activeIdx) {
+        span.className = "track-word active";
+        span.style.display = "inline-block";
+
+        let spanTop = span.offsetTop;
+        let parent = span.offsetParent;
+        while (parent && parent !== trackingWords) {
+          spanTop += parent.offsetTop;
+          parent = parent.offsetParent;
+        }
+
+        const spanBottom = spanTop + span.offsetHeight;
+        const visibleTop = trackingWords.scrollTop;
+        const visibleBottom = visibleTop + trackingWords.clientHeight;
+
+        if (spanBottom > visibleBottom) {
+          trackingWords.scrollTop = spanBottom - trackingWords.clientHeight;
+        } else if (spanTop < visibleTop) {
+          trackingWords.scrollTop = spanTop;
+        }
+      } else {
+        span.className = "track-word";
+        span.style.display = "none";
+      }
+    });
   }
 }
 
@@ -178,16 +222,19 @@ document.addEventListener("click", (e) => {
   }
 });
 
-document.querySelectorAll(".speed-opt").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".speed-opt").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    const speed = parseFloat(btn.dataset.speed);
+const speedSlider = document.getElementById("speedSlider");
+const speedVal = document.getElementById("speedVal");
+
+if (speedSlider) {
+  speedSlider.addEventListener("input", (e) => {
+    const speed = parseFloat(e.target.value);
     audioEl.playbackRate = speed;
-    speedToggle.textContent = `${speed}×`;
-    speedMenu.classList.remove("open");
+    const formattedSpeed = speed.toFixed(1) + "×";
+    speedToggle.textContent = formattedSpeed;
+    if (speedVal) speedVal.textContent = formattedSpeed;
+    saveSetting({ pace: speed });
   });
-});
+}
 
 function fmtTime(s) {
   const m = Math.floor(s / 60);
@@ -233,36 +280,58 @@ btnForward.addEventListener("click", doForward);
 document.getElementById("bwdMinus").addEventListener("click", () => {
   backwardSec = Math.max(MIN_SKIP, backwardSec - 1);
   bwdVal.textContent = backwardSec;
+  saveSetting({ backward_sec: backwardSec });
 });
 document.getElementById("bwdPlus").addEventListener("click", () => {
   backwardSec = Math.min(MAX_SKIP, backwardSec + 1);
   bwdVal.textContent = backwardSec;
+  saveSetting({ backward_sec: backwardSec });
 });
 document.getElementById("fwdMinus").addEventListener("click", () => {
   forwardSec = Math.max(MIN_SKIP, forwardSec - 1);
   fwdVal.textContent = forwardSec;
+  saveSetting({ forward_sec: forwardSec });
 });
 document.getElementById("fwdPlus").addEventListener("click", () => {
   forwardSec = Math.min(MAX_SKIP, forwardSec + 1);
   fwdVal.textContent = forwardSec;
+  saveSetting({ forward_sec: forwardSec });
 });
 
 /* ── Keyboard Shortcuts ──────────────────────────────────── */
+function toggleTracking() {
+  trackingHidden = !trackingHidden;
+  trackingWords.classList.toggle("hidden", trackingHidden);
+  const btnHideTrack = document.getElementById("btnHideTrack");
+  if (btnHideTrack) btnHideTrack.textContent = trackingHidden ? "👁 Show" : "👁 Hide";
+}
+
 document.addEventListener("keydown", (e) => {
-  // Shift → play/pause
-  if (e.key === "Shift") {
+  const isInput = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable;
+
+  // ~ or ` (Backquote key above Tab) → toggle tracking words visibility
+  if ((e.key === "`" || e.key === "~" || e.code === "Backquote") && !isInput) {
+    e.preventDefault();
+    toggleTracking();
+    return;
+  }
+
+  // Space → play/pause (when not typing in text inputs)
+  if ((e.key === " " || e.code === "Space") && !isInput) {
     e.preventDefault();
     togglePlay();
     return;
   }
+
   // ArrowLeft → backward skip
-  if (e.key === "ArrowLeft") {
+  if (e.key === "ArrowLeft" && !isInput) {
     e.preventDefault();
     doBackward();
     return;
   }
+
   // ArrowRight → forward skip
-  if (e.key === "ArrowRight") {
+  if (e.key === "ArrowRight" && !isInput) {
     e.preventDefault();
     doForward();
     return;
@@ -473,6 +542,27 @@ function handleAdvance(input, index) {
 /* ── Check Logic ─────────────────────────────────────────── */
 btnCheck.addEventListener("click", () => {
   const inputs = dictationGrid.querySelectorAll("input");
+  const boxes = dictationGrid.querySelectorAll(".word-box");
+
+  if (isChecked) {
+    inputs.forEach((input) => {
+      input.placeholder = "";
+      input.classList.remove("correct", "incorrect", "missing");
+    });
+    boxes.forEach((box) => {
+      box.removeAttribute("data-tooltip");
+      const badge = box.querySelector(".word-badge");
+      if (badge) {
+        badge.textContent = "";
+        badge.className = "word-badge";
+      }
+    });
+    isChecked = false;
+    btnCheck.classList.remove("active");
+    scoreBar.classList.remove("visible");
+    return;
+  }
+
   let correctCount = 0;
   let wrongCount = 0;
   let missingCount = 0;
@@ -483,20 +573,17 @@ btnCheck.addEventListener("click", () => {
     const badge = input.parentElement.querySelector(".word-badge");
     const box = input.parentElement;
 
-    // Remove old classes, placeholder, and tooltip
     input.classList.remove("correct", "incorrect", "missing");
     input.placeholder = "";
     if (badge) badge.className = "word-badge";
     box.removeAttribute("data-tooltip");
 
     if (!typed) {
-      // Empty = missing -> display word as dim placeholder text without changing value
       input.classList.add("missing");
       input.placeholder = answer;
       if (badge) badge.textContent = "";
       missingCount++;
     } else if (normalizeWord(typed) === normalizeWord(answer)) {
-      // Correct -> keep typed text
       input.classList.add("correct");
       if (badge) {
         badge.textContent = "✓";
@@ -504,7 +591,6 @@ btnCheck.addEventListener("click", () => {
       }
       correctCount++;
     } else {
-      // Wrong -> mark incorrect and add hover tooltip with correct answer
       input.classList.add("incorrect");
       if (badge) {
         badge.textContent = "✗";
@@ -516,17 +602,15 @@ btnCheck.addEventListener("click", () => {
   });
 
   isChecked = true;
+  btnCheck.classList.add("active");
 
-  // Show score (only count hidden words)
   const total = inputs.length;
   const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
   scoreFill.style.width = pct + "%";
   scorePercent.textContent = pct + "%";
 
-  // Detail text
   scoreDetail.textContent = `${correctCount} correct · ${wrongCount} wrong · ${missingCount} missing  (${total} blanks)`;
 
-  // Color
   if (pct >= 80) {
     scoreFill.style.background = "var(--success)";
     scorePercent.style.color = "var(--success)";
@@ -558,6 +642,7 @@ btnReplay.addEventListener("click", () => {
     }
   });
   isChecked = false;
+  btnCheck.classList.remove("active");
   scoreBar.classList.remove("visible");
   if (btnApplyPct) btnApplyPct.disabled = false;
   if (pctSelect) pctSelect.disabled = false;
@@ -578,15 +663,20 @@ function setStatus(msg, isError = false) {
 
 /* ── Hide / Show Tracking ────────────────────────────────── */
 const btnHideTrack = document.getElementById("btnHideTrack");
-btnHideTrack.addEventListener("click", () => {
-  trackingHidden = !trackingHidden;
-  trackingWords.classList.toggle("hidden", trackingHidden);
-  btnHideTrack.textContent = trackingHidden ? "👁 Show" : "👁 Hide";
-});
+if (btnHideTrack) {
+  btnHideTrack.addEventListener("click", toggleTracking);
+}
 
 /* ── Hidden Percentage Select & Apply ────────────────────── */
+if (pctSelect) {
+  pctSelect.addEventListener("change", () => {
+    saveSetting({ hidden_pct: parseInt(pctSelect.value, 10) });
+  });
+}
+
 if (btnApplyPct) {
   btnApplyPct.addEventListener("click", () => {
+    if (pctSelect) saveSetting({ hidden_pct: parseInt(pctSelect.value, 10) });
     if (currentRawText) {
       buildDictation(currentRawText);
       btnApplyPct.disabled = true;
@@ -703,21 +793,14 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Save word button in popup
 btnPopupSave.addEventListener("click", () => {
   if (!currentLookupData) return;
 
   const exists = savedVocab.some((w) => w.word.toLowerCase() === currentLookupData.word.toLowerCase());
   if (!exists) {
-    const wasEmpty = savedVocab.length === 0;
     currentLookupData.stt = savedVocab.length + 1;
     savedVocab.push(currentLookupData);
     updateVocabUI();
-
-    // Auto-show panel ONLY when panel was empty
-    if (wasEmpty) {
-      vocabPanel.classList.add("open");
-    }
   }
 
   contextPopup.classList.remove("visible");
@@ -800,5 +883,56 @@ btnExportVocab.addEventListener("click", async () => {
   }
 });
 
+/* ── Persistence Settings ────────────────────────────────── */
+async function loadInitialSettings() {
+  let s = {};
+  try {
+    const res = await fetch("/api/settings");
+    if (res.ok) s = await res.json();
+  } catch (e) {}
+
+  try {
+    const local = JSON.parse(localStorage.getItem("user_tts_settings") || "{}");
+    s = { ...s, ...local };
+  } catch (e) {}
+
+  if (s.hidden_pct !== undefined && pctSelect) {
+    pctSelect.value = s.hidden_pct;
+  }
+  if (s.backward_sec !== undefined) {
+    backwardSec = parseInt(s.backward_sec, 10);
+    if (bwdVal) bwdVal.textContent = backwardSec;
+  }
+  if (s.forward_sec !== undefined) {
+    forwardSec = parseInt(s.forward_sec, 10);
+    if (fwdVal) fwdVal.textContent = forwardSec;
+  }
+  if (s.pace !== undefined && speedSlider) {
+    const pace = parseFloat(s.pace);
+    speedSlider.value = pace;
+    const formatted = pace.toFixed(1) + "×";
+    if (speedToggle) speedToggle.textContent = formatted;
+    if (speedVal) speedVal.textContent = formatted;
+    audioEl.playbackRate = pace;
+  }
+}
+
+async function saveSetting(partial) {
+  try {
+    const local = JSON.parse(localStorage.getItem("user_tts_settings") || "{}");
+    const updated = { ...local, ...partial };
+    localStorage.setItem("user_tts_settings", JSON.stringify(updated));
+  } catch (e) {}
+
+  try {
+    await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(partial),
+    });
+  } catch (e) {}
+}
+
 /* ── Init ────────────────────────────────────────────────── */
 loadVoices();
+loadInitialSettings();
