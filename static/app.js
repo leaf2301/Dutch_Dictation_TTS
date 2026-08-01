@@ -988,6 +988,7 @@ if (btnSaveProgress) {
           hidden_pct: pctSelect ? parseInt(pctSelect.value, 10) : 100,
           pace: speedSlider ? parseFloat(speedSlider.value) : 1.0,
           audio_time: audioEl ? audioEl.currentTime : 0,
+          timer_seconds: timerSeconds,
           user_inputs: inputsObj,
         }),
       });
@@ -1059,6 +1060,11 @@ async function checkResumeParam() {
       });
     }
 
+    if (progress.timer_seconds !== undefined) {
+      timerSeconds = parseInt(progress.timer_seconds, 10) || 0;
+      updateTimerDisplay();
+    }
+
     if (progress.audio_time) {
       const targetTime = parseFloat(progress.audio_time);
       const setAudioTime = () => {
@@ -1083,6 +1089,54 @@ async function checkResumeParam() {
   } catch (err) {
     setStatus("Error resuming lesson: " + err.message, true);
   }
+}
+
+/* ── Manual Study Timer ──────────────────────────────────── */
+let timerSeconds = 0;
+let timerInterval = null;
+let isTimerRunning = false;
+
+const timerDisplay = document.getElementById("timerDisplay");
+const btnTimerToggle = document.getElementById("btnTimerToggle");
+
+function formatHHMMSS(totalSec) {
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function updateTimerDisplay() {
+  if (timerDisplay) {
+    timerDisplay.textContent = "⏱ " + formatHHMMSS(timerSeconds);
+  }
+}
+
+function toggleManualTimer() {
+  if (isTimerRunning) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    isTimerRunning = false;
+    if (btnTimerToggle) {
+      btnTimerToggle.textContent = "⏱ Start";
+      btnTimerToggle.classList.remove("running");
+    }
+  } else {
+    isTimerRunning = true;
+    if (btnTimerToggle) {
+      btnTimerToggle.textContent = "⏱ Pause";
+      btnTimerToggle.classList.add("running");
+    }
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      updateTimerDisplay();
+    }, 1000);
+  }
+}
+
+if (btnTimerToggle) {
+  btnTimerToggle.addEventListener("click", toggleManualTimer);
 }
 
 /* ── Init ────────────────────────────────────────────────── */
