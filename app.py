@@ -320,11 +320,17 @@ def get_offline_lookup(clean_word):
         row = cur.fetchone()
         if row and (row[0] or row[1] or row[2]):
             conn.close()
+            vn_val = row[1] or ""
+            en_val = row[2] or ""
+            if (not vn_val or vn_val == en_val) and en_val:
+                translated_vn = translate_en_to_vi(en_val)
+                if translated_vn:
+                    vn_val = translated_vn
             return {
                 "word": clean_word,
                 "phonetic": row[0] or f"/{clean_word.lower()}/",
-                "vn": row[1] or clean_word,
-                "en": row[2] or clean_word,
+                "vn": vn_val or clean_word,
+                "en": en_val or clean_word,
                 "lemma": row[3] or clean_word,
                 "source": "offline"
             }
@@ -358,6 +364,10 @@ def get_all_offline_dict():
         return jsonify({})
 
 
+from concurrent.futures import ThreadPoolExecutor
+executor = ThreadPoolExecutor(max_workers=5)
+
+
 @app.route("/api/lookup", methods=["POST"])
 def lookup_word():
     """Lookup Dutch word (lemma, VN, EN) + Dual-Bridge sentence translation."""
@@ -375,21 +385,40 @@ def lookup_word():
         return jsonify(LOOKUP_CACHE[cache_key])
 
     offline_res = get_offline_lookup(clean_word)
+
+    # Submit tasks to thread pool to execute in parallel
+    future_en = executor.submit(translate_nl_to_en, clean_word) if not (offline_res and offline_res.get("en")) else None
+    future_vn = executor.submit(translate_nl_to_vi, clean_word) if not (offline_res and offline_res.get("vn")) else None
+    future_sent = executor.submit(translate_bridge_nl_to_vi, raw_sentence) if raw_sentence else None
+
     if offline_res:
         vn_word = offline_res.get("vn")
         en_word = offline_res.get("en")
         lemma_word = offline_res.get("lemma") or clean_word
         phonetic_word = offline_res.get("phonetic") or f"/{clean_word.lower()}/"
     else:
-        en_word = translate_nl_to_en(clean_word)
-        vn_word = translate_nl_to_vi(clean_word)
+        en_word = future_en.result() if future_en else clean_word
+        vn_word = future_vn.result() if future_vn else clean_word
         lemma_word = clean_word
         phonetic_word = f"/{clean_word.lower()}/"
 
     sentence_vn = ""
     sentence_en = ""
-    if raw_sentence:
-        sentence_vn, sentence_en = translate_bridge_nl_to_vi(raw_sentence)
+    if future_sent:
+        sentence_vn, sentence_en = future_sent.result()
+
+    if not offline_res and (vn_word or en_word):
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cur = conn.cursor()
+            cur.execute("""
+            INSERT OR REPLACE INTO dictionary (word, phonetic, nl, vn, en, lemma)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """, (clean_word.lower(), phonetic_word, en_word or clean_word, vn_word or clean_word, en_word or clean_word, clean_word))
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
     res = {
         "word": clean_word,
