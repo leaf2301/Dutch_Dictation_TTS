@@ -49,8 +49,20 @@ async function loadVoices() {
       opt.textContent = `${v.short}  (${v.gender})`;
       voiceSelect.appendChild(opt);
     });
-    const defaultVoice = voices.find((v) => v.short === "nl-NL-ColetteNeural") || voices[0];
-    if (defaultVoice) voiceSelect.value = defaultVoice.short;
+
+    let savedIdx = 0;
+    try {
+      const local = JSON.parse(localStorage.getItem("user_tts_settings") || "{}");
+      if (local.voice_index !== undefined) {
+        savedIdx = parseInt(local.voice_index, 10);
+      }
+    } catch (e) {}
+
+    if (savedIdx >= 0 && savedIdx < voiceSelect.options.length) {
+      voiceSelect.selectedIndex = savedIdx;
+    } else {
+      voiceSelect.selectedIndex = 0;
+    }
     btnGenerate.disabled = false;
   } catch (e) {
     voiceSelect.innerHTML = '<option value="">Failed to load voices</option>';
@@ -58,13 +70,21 @@ async function loadVoices() {
   }
 }
 
+voiceSelect.addEventListener("change", () => {
+  saveSetting({ voice_index: voiceSelect.selectedIndex, voice: voiceSelect.value });
+});
+
 /* ── Generate TTS ────────────────────────────────────────── */
 btnGenerate.addEventListener("click", async () => {
   const text = textInput.value.trim();
   if (!text) {
-    setStatus("Please paste some English text first.", true);
+    setStatus("Please paste some Dutch text first.", true);
     return;
   }
+
+  // Reset manual timer for new lesson
+  timerSeconds = 0;
+  updateTimerDisplay();
 
   btnGenerate.classList.add("loading");
   btnGenerate.disabled = true;
@@ -90,6 +110,7 @@ btnGenerate.addEventListener("click", async () => {
 
     buildTrackingWords();
     buildDictation(text);
+    if (savedVocab.length > 0) autoSaveVocab();
 
     trackingSection.classList.add("visible");
     audioBar.classList.add("visible");
@@ -118,7 +139,6 @@ function buildTrackingWords() {
       span.className = "track-word";
       span.dataset.idx = idx;
       span.textContent = wb.text;
-      span.style.display = "none";
       trackingWords.appendChild(span);
     });
   } else {
@@ -153,10 +173,8 @@ function updateTracking() {
     wordSpans.forEach((span, idx) => {
       if (idx < activeIdx) {
         span.className = "track-word past";
-        span.style.display = "inline-block";
       } else if (idx === activeIdx) {
         span.className = "track-word active";
-        span.style.display = "inline-block";
 
         let spanTop = span.offsetTop;
         let parent = span.offsetParent;
@@ -176,7 +194,6 @@ function updateTracking() {
         }
       } else {
         span.className = "track-word";
-        span.style.display = "none";
       }
     });
   }
@@ -426,12 +443,16 @@ function determineHiddenIndices(wordsInLine, hiddenPct) {
   return hiddenSet;
 }
 
-function buildDictation(text) {
+let activeHiddenIndices = [];
+
+function buildDictation(text, savedHiddenIndices = null) {
   currentRawText = text;
   dictationGrid.innerHTML = "";
   isChecked = false;
   originalWords = [];
+  activeHiddenIndices = [];
 
+  const savedSet = (savedHiddenIndices && Array.isArray(savedHiddenIndices)) ? new Set(savedHiddenIndices.map(Number)) : null;
   const hiddenPct = parseInt(pctSelect ? pctSelect.value : 100, 10) || 100;
   const rawLines = text.split("\n");
   let wordCounter = 0;
@@ -463,7 +484,9 @@ function buildDictation(text) {
         const i = wordCounter++;
         originalWords.push(word);
 
-        const isHidden = hiddenSet.has(wIdx);
+        const isHidden = savedSet ? savedSet.has(i) : hiddenSet.has(wIdx);
+        if (isHidden) activeHiddenIndices.push(i);
+
         const box = document.createElement("div");
         box.className = "word-box" + (isHidden ? "" : " unhidden");
 
@@ -716,8 +739,10 @@ const contextPopup = document.getElementById("contextPopup");
 const popupStt = document.getElementById("popupStt");
 const popupWord = document.getElementById("popupWord");
 const popupPhonetic = document.getElementById("popupPhonetic");
-const popupEn = document.getElementById("popupNl") || document.getElementById("popupEn");
+const popupEn = document.getElementById("popupEn");
 const popupVn = document.getElementById("popupVn");
+const popupSentence = document.getElementById("popupSentence");
+const popupSentenceVn = document.getElementById("popupSentenceVn");
 const btnPopupSave = document.getElementById("btnPopupSave");
 
 const vocabChip = document.getElementById("vocabChip");
@@ -732,92 +757,234 @@ let savedVocab = [];
 let currentLookupData = null;
 const clientLookupCache = {};
 
-// Right-click on selection -> open context popup
-document.addEventListener("contextmenu", async (e) => {
-  const selection = window.getSelection().toString().trim();
-  if (!selection || selection.length > 50) {
+function getSentenceForWord(targetWord) {
+  const fullText = (textInput ? textInput.value : "") || currentRawText || "";
+  if (!fullText || !targetWord) return "";
+
+  const sentences = fullText.split(/(?<=[.!?])\s+/);
+  const cleanTarget = targetWord.toLowerCase().trim();
+
+  for (const s of sentences) {
+    if (s.toLowerCase().includes(cleanTarget)) {
+      return s.trim();
+    }
+  }
+  return fullText.slice(0, 100).trim();
+}
+
+async function openLookupForSelection(selection, clientX, clientY) {
+  if (!selection || selection.length > 200) {
     contextPopup.classList.remove("visible");
     return;
   }
 
-  e.preventDefault();
-
   const nextStt = savedVocab.length + 1;
-  const cleanWordKey = selection.toLowerCase();
+  const cleanWordKey = selection.toLowerCase().trim();
 
-  const posX = Math.min(e.clientX, window.innerWidth - 330);
-  const posY = Math.min(e.clientY, window.innerHeight - 200);
+  const posX = Math.min(clientX, window.innerWidth - 340);
+  const posY = Math.min(clientY, window.innerHeight - 280);
   contextPopup.style.left = Math.max(10, posX) + "px";
   contextPopup.style.top = Math.max(10, posY) + "px";
 
-  // Check client-side cache for instant display (0ms)
-  if (clientLookupCache[cleanWordKey]) {
-    const data = clientLookupCache[cleanWordKey];
-    const defText = data.nl || data.en || "";
-    currentLookupData = {
-      stt: nextStt,
-      word: data.word,
-      phonetic: data.phonetic,
-      en: defText,
-      vn: data.vn,
-    };
-    popupStt.textContent = nextStt;
-    popupWord.textContent = data.word;
-    popupPhonetic.textContent = data.phonetic;
-    if (popupEn) popupEn.textContent = defText;
-    popupVn.textContent = data.vn;
-    btnPopupSave.disabled = false;
-    contextPopup.classList.add("visible");
-    return;
+  const popupEnEl = document.getElementById("popupEn");
+  const popupVnEl = document.getElementById("popupVn");
+  const popupSentenceEl = document.getElementById("popupSentence");
+  const popupSentenceVnEl = document.getElementById("popupSentenceVn");
+
+  const contextSentence = getSentenceForWord(selection);
+
+  // Check cache or offline dict
+  const cached = clientLookupCache[cleanWordKey];
+
+  popupStt.textContent = nextStt;
+  popupWord.textContent = (cached && cached.word) ? cached.word : selection;
+  popupPhonetic.textContent = (cached && cached.phonetic) ? cached.phonetic : `/${selection.toLowerCase()}/`;
+  if (popupSentenceEl) popupSentenceEl.textContent = contextSentence || "…";
+
+  if (cached) {
+    if (popupVnEl) popupVnEl.textContent = cached.vn || "—";
+    if (popupEnEl) popupEnEl.textContent = cached.en || "—";
+  } else {
+    if (popupVnEl) popupVnEl.textContent = "Đang nạp…";
+    if (popupEnEl) popupEnEl.textContent = "Đang nạp…";
   }
 
-  // Pre-set word immediately with subtle placeholder
-  popupStt.textContent = nextStt;
-  popupWord.textContent = selection;
-  popupPhonetic.textContent = "";
-  if (popupEn) popupEn.textContent = "…";
-  popupVn.textContent = "…";
-  btnPopupSave.disabled = true;
+  if (popupSentenceVnEl) popupSentenceVnEl.textContent = (cached && cached.sentence_vn) ? cached.sentence_vn : "Đang dịch…";
+
+  currentLookupData = {
+    stt: nextStt,
+    word: (cached && cached.word) ? cached.word : selection,
+    phonetic: (cached && cached.phonetic) ? cached.phonetic : `/${selection.toLowerCase()}/`,
+    vn: (cached && cached.vn) ? cached.vn : selection,
+    en: (cached && cached.en) ? cached.en : selection,
+    sentence: contextSentence,
+    sentence_vn: (cached && cached.sentence_vn) ? cached.sentence_vn : "",
+  };
+  btnPopupSave.disabled = false;
+  contextPopup.classList.add("visible");
 
   try {
     const res = await fetch("/api/lookup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ word: selection }),
+      body: JSON.stringify({ word: selection, sentence: contextSentence }),
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
     clientLookupCache[cleanWordKey] = data;
-    const defText = data.nl || data.en || "";
 
     currentLookupData = {
       stt: nextStt,
-      word: data.word,
-      phonetic: data.phonetic,
-      en: defText,
-      vn: data.vn,
+      word: data.word || selection,
+      phonetic: data.phonetic || "",
+      vn: data.vn || "—",
+      en: data.en || "—",
+      sentence: data.sentence || contextSentence,
+      sentence_vn: data.sentence_vn || "—",
     };
 
-    popupWord.textContent = data.word;
-    popupPhonetic.textContent = data.phonetic;
-    if (popupEn) popupEn.textContent = defText;
-    popupVn.textContent = data.vn;
+    popupWord.textContent = data.word || selection;
+    popupPhonetic.textContent = data.phonetic || "";
+    if (popupVnEl) popupVnEl.textContent = data.vn || "—";
+    if (popupEnEl) popupEnEl.textContent = data.en || "—";
+    if (popupSentenceEl) popupSentenceEl.textContent = data.sentence || contextSentence || "—";
+    if (popupSentenceVnEl) popupSentenceVnEl.textContent = data.sentence_vn || "—";
     btnPopupSave.disabled = false;
-    contextPopup.classList.add("visible");
   } catch (err) {
-    if (popupEn) popupEn.textContent = "Could not fetch definition.";
-    popupVn.textContent = "Không thể tra từ.";
-    contextPopup.classList.add("visible");
+    if (!cached) {
+      if (popupVnEl) popupVnEl.textContent = "Không thể tra từ.";
+      if (popupEnEl) popupEnEl.textContent = "Không thể tra nghĩa.";
+    }
+  }
+}
+
+// Right-click on selection -> unified routing by word count
+document.addEventListener("contextmenu", (e) => {
+  const selection = window.getSelection().toString().trim();
+  if (!selection || selection.length > 200) {
+    if (contextPopup) contextPopup.classList.remove("visible");
+    if (sentenceTransPopup) sentenceTransPopup.classList.remove("visible");
+    return;
+  }
+
+  e.preventDefault();
+  const wordCount = countWordsInText(selection);
+
+  if (wordCount <= 3) {
+    if (sentenceTransPopup) sentenceTransPopup.classList.remove("visible");
+    openLookupForSelection(selection, e.clientX, e.clientY);
+  } else {
+    if (contextPopup) contextPopup.classList.remove("visible");
+    openSentenceTranslation(selection, e.clientX, e.clientY);
   }
 });
 
-// Close popup on outside click
-document.addEventListener("click", (e) => {
-  if (contextPopup && !contextPopup.contains(e.target)) {
-    contextPopup.classList.remove("visible");
+/* ── Unified Double-Click Handler for Word Lookup & Sentence Translation ── */
+const sentenceTransPopup = document.getElementById("sentenceTransPopup");
+const btnCloseTrans = document.getElementById("btnCloseTrans");
+const sentTransVi = document.getElementById("sentTransVi");
+const sentTransEn = document.getElementById("sentTransEn");
+
+if (btnCloseTrans) {
+  btnCloseTrans.addEventListener("click", () => {
+    if (sentenceTransPopup) sentenceTransPopup.classList.remove("visible");
+  });
+}
+
+function countWordsInText(text) {
+  if (!text) return 0;
+  const matches = text.match(/[a-zA-Z0-9'’]+/g);
+  return matches ? matches.length : 0;
+}
+
+async function openSentenceTranslation(selectedText, clientX, clientY) {
+  const posX = Math.min(clientX, window.innerWidth - 380);
+  const posY = Math.min(clientY, window.innerHeight - 200);
+  if (sentenceTransPopup) {
+    sentenceTransPopup.style.left = Math.max(10, posX) + "px";
+    sentenceTransPopup.style.top = Math.max(10, posY) + "px";
+    sentTransVi.textContent = "Đang dịch…";
+    if (sentTransEn) sentTransEn.textContent = "…";
+    sentenceTransPopup.classList.add("visible");
+  }
+
+  try {
+    const res = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: selectedText }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    if (sentTransVi) sentTransVi.textContent = data.translated_vi || "—";
+    if (sentTransEn) sentTransEn.textContent = data.translated_en || "—";
+  } catch (err) {
+    if (sentTransVi) sentTransVi.textContent = "Không thể dịch câu";
+    if (sentTransEn) sentTransEn.textContent = err.message;
+  }
+}
+
+// Unified Double-Click listener on document (restricted to textInput and trackingWords)
+document.addEventListener("dblclick", async (e) => {
+  const textInput = document.getElementById("textInput");
+  const trackingWords = document.getElementById("trackingWords");
+
+  const isInsideTextInput = textInput && textInput.contains(e.target);
+  const isInsideTrackingWords = trackingWords && trackingWords.contains(e.target);
+
+  if (!isInsideTextInput && !isInsideTrackingWords) {
+    return;
+  }
+
+  let selectedText = window.getSelection().toString().trim();
+
+  if (!selectedText && isInsideTextInput) {
+    const start = textInput.selectionStart;
+    const end = textInput.selectionEnd;
+    if (start !== undefined && end !== undefined && start !== end) {
+      selectedText = textInput.value.substring(start, end).trim();
+    }
+  }
+
+  if (!selectedText) return;
+
+  const wordCount = countWordsInText(selectedText);
+
+  if (wordCount <= 3) {
+    // ≤ 3 words -> Open Vocabulary Lookup & Save Dialog (#contextPopup)
+    if (sentenceTransPopup) sentenceTransPopup.classList.remove("visible");
+    openLookupForSelection(selectedText, e.clientX, e.clientY);
+  } else {
+    // > 3 words -> Open Sentence Translation Dialog (#sentenceTransPopup)
+    if (contextPopup) contextPopup.classList.remove("visible");
+    openSentenceTranslation(selectedText, e.clientX, e.clientY);
   }
 });
+
+// Close open dialogs when clicking outside
+document.addEventListener("click", (e) => {
+  if (contextPopup && contextPopup.classList.contains("visible") && !contextPopup.contains(e.target)) {
+    contextPopup.classList.remove("visible");
+  }
+  if (sentenceTransPopup && sentenceTransPopup.classList.contains("visible") && !sentenceTransPopup.contains(e.target)) {
+    sentenceTransPopup.classList.remove("visible");
+  }
+});
+
+async function autoSaveVocab() {
+  if (!currentFolderName) return;
+  try {
+    await fetch("/api/save-vocab", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ words: savedVocab, folder_name: currentFolderName }),
+    });
+  } catch (err) {
+    console.error("Auto-save vocab error:", err);
+  }
+}
 
 btnPopupSave.addEventListener("click", () => {
   if (!currentLookupData) return;
@@ -827,6 +994,7 @@ btnPopupSave.addEventListener("click", () => {
     currentLookupData.stt = savedVocab.length + 1;
     savedVocab.push(currentLookupData);
     updateVocabUI();
+    autoSaveVocab();
   }
 
   contextPopup.classList.remove("visible");
@@ -867,6 +1035,7 @@ function updateVocabUI() {
       const index = parseInt(btn.dataset.index, 10);
       savedVocab.splice(index, 1);
       updateVocabUI();
+      autoSaveVocab();
     });
   });
 }
@@ -878,35 +1047,6 @@ vocabChip.addEventListener("click", () => {
 
 btnClosePanel.addEventListener("click", () => {
   vocabPanel.classList.remove("open");
-});
-
-// Save vocabulary to local file
-btnExportVocab.addEventListener("click", async () => {
-  if (savedVocab.length === 0) {
-    alert("No words saved to export!");
-    return;
-  }
-
-  try {
-    btnExportVocab.disabled = true;
-    btnExportVocab.textContent = "Saving…";
-
-    const res = await fetch("/api/save-vocab", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ words: savedVocab, folder_name: currentFolderName }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Save failed");
-
-    alert(`Saved to local file:\n${data.filepath}`);
-  } catch (err) {
-    alert("Error saving file: " + err.message);
-  } finally {
-    btnExportVocab.disabled = false;
-    btnExportVocab.textContent = "💾 Save to File";
-  }
 });
 
 /* ── Persistence Settings ────────────────────────────────── */
@@ -932,6 +1072,12 @@ async function loadInitialSettings() {
   if (s.forward_sec !== undefined) {
     forwardSec = parseInt(s.forward_sec, 10);
     if (fwdVal) fwdVal.textContent = forwardSec;
+  }
+  if (s.voice_index !== undefined && voiceSelect && voiceSelect.options.length > 0) {
+    const idx = parseInt(s.voice_index, 10);
+    if (idx >= 0 && idx < voiceSelect.options.length) {
+      voiceSelect.selectedIndex = idx;
+    }
   }
   if (s.pace !== undefined && speedSlider) {
     const pace = parseFloat(s.pace);
@@ -986,6 +1132,7 @@ if (btnSaveProgress) {
           raw_text: currentRawText,
           voice: voiceSelect ? voiceSelect.value : "",
           hidden_pct: pctSelect ? parseInt(pctSelect.value, 10) : 100,
+          hidden_indices: activeHiddenIndices,
           pace: speedSlider ? parseFloat(speedSlider.value) : 1.0,
           audio_time: audioEl ? audioEl.currentTime : 0,
           timer_seconds: timerSeconds,
@@ -1048,7 +1195,12 @@ async function checkResumeParam() {
     }
 
     buildTrackingWords();
-    buildDictation(currentRawText);
+    buildDictation(currentRawText, progress.hidden_indices);
+
+    if (data.saved_vocab && Array.isArray(data.saved_vocab)) {
+      savedVocab = data.saved_vocab;
+      updateVocabUI();
+    }
 
     if (progress.user_inputs) {
       const inputs = dictationGrid.querySelectorAll("input");
@@ -1139,8 +1291,19 @@ if (btnTimerToggle) {
   btnTimerToggle.addEventListener("click", toggleManualTimer);
 }
 
+async function loadOfflineDictCache() {
+  try {
+    const res = await fetch("/api/dict-all");
+    if (res.ok) {
+      const dict = await res.json();
+      Object.assign(clientLookupCache, dict);
+    }
+  } catch (e) {}
+}
+
 /* ── Init ────────────────────────────────────────────────── */
 async function init() {
+  await loadOfflineDictCache();
   await loadVoices();
   await loadInitialSettings();
   await checkResumeParam();

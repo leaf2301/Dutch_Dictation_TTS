@@ -115,18 +115,22 @@
     </div>
   </div>
 
-  <!-- Selection Right-Click Popup -->
+  <!-- Selection Right-Click Popup (6-in-1) -->
   <div class="context-popup" id="contextPopup">
     <div class="popup-header">
-      <span class="popup-title"><span id="popupStt">1</span>. <strong id="popupWord">Go</strong></span>
-      <span class="popup-phonetic" id="popupPhonetic">/ɡoʊ/</span>
+      <span class="popup-title"><span id="popupStt">1</span>. <strong id="popupWord">Word</strong></span>
+      <span class="popup-phonetic" id="popupPhonetic">/phonetic/</span>
     </div>
     <div class="popup-body">
-      <div class="popup-line"><strong>NL:</strong> <span id="popupNl">Loading…</span></div>
-      <div class="popup-line"><strong>VN:</strong> <span id="popupVn">Loading…</span></div>
+      <div class="popup-line"><strong>🇻🇳 VN:</strong> <span id="popupVn">Đang nạp…</span></div>
+      <div class="popup-line"><strong>🇬🇧 EN:</strong> <span id="popupEn">Loading…</span></div>
+      <div class="popup-sentence-block" id="popupSentenceBlock">
+        <div class="popup-line"><strong>💬 Câu:</strong> <span id="popupSentence">…</span></div>
+        <div class="popup-line"><strong>🌐 Dịch:</strong> <span id="popupSentenceVn">…</span></div>
+      </div>
     </div>
     <div class="popup-footer">
-      <button class="btn btn-sm btn-primary" id="btnPopupSave">💾 Save</button>
+      <button class="btn btn-sm btn-primary" id="btnPopupSave">💾 Save Vocabulary</button>
     </div>
   </div>
 
@@ -140,12 +144,23 @@
     <div class="vocab-panel-header">
       <h3>📚 Saved Vocabulary (<span id="panelCount">0</span>)</h3>
       <div class="vocab-panel-actions">
-        <button class="btn btn-sm btn-primary" id="btnExportVocab">💾 Save to File</button>
         <button class="btn-close-panel" id="btnClosePanel" title="Close Panel">✖</button>
       </div>
     </div>
     <div class="vocab-panel-body" id="vocabList">
       <div class="vocab-empty">No words saved yet. Highlight any word & right-click!</div>
+    </div>
+  </div>
+
+  <!-- Sentence Translation Popup -->
+  <div class="sentence-trans-popup" id="sentenceTransPopup">
+    <div class="trans-header">
+      <span class="trans-title">🌐 Dịch câu</span>
+      <button class="trans-close" id="btnCloseTrans">✕</button>
+    </div>
+    <div class="trans-body">
+      <div class="trans-row vi"><span class="trans-flag">🇻🇳</span> <span id="sentTransVi">Đang dịch…</span></div>
+      <div class="trans-row en"><span class="trans-flag">🇬🇧</span> <span id="sentTransEn">…</span></div>
     </div>
   </div>
 

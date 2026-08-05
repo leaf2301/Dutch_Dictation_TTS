@@ -483,7 +483,7 @@ header p {
   text-align: center;
   gap: 0.35rem;
   padding: 0.5rem 0.85rem;
-  background: var(--surface-2);
+  background: var(--surface);
   border-radius: var(--radius-sm);
   height: 4.6rem;
   min-height: 4.6rem;
@@ -518,22 +518,36 @@ header p {
 }
 
 .track-word {
+  display: inline-block;
   padding: 0.15rem 0.45rem;
+  margin: 0.1rem 0.05rem;
   border-radius: 4px;
   font-size: 0.95rem;
-  transition: all 0.15s;
   color: var(--text-muted);
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+
+  opacity: 0;
+  transform: translateY(4px);
+  visibility: hidden;
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out, background-color 0.15s ease, color 0.15s ease;
 }
 
 .track-word.active {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
   background: var(--accent);
-  color: #fff;
-  transform: scale(1.08);
-  box-shadow: 0 2px 8px var(--accent-glow);
+  color: #ffffff;
 }
 
 .track-word.past {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
   color: var(--text);
+  background: transparent;
 }
 
 /* ── Dictation ──────────────────────────────────────── */
@@ -884,6 +898,14 @@ header p {
   min-width: 24px;
 }
 
+.popup-sentence-block {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 .popup-footer {
   display: flex;
   justify-content: flex-end;
@@ -1046,6 +1068,77 @@ header p {
   opacity: 1;
   color: var(--error);
 }
+/* ── Sentence Translation Popup ────────────────────────── */
+.sentence-trans-popup {
+  position: fixed;
+  z-index: 1000;
+  width: 360px;
+  max-width: 90vw;
+  background: var(--surface-1, #1e293b);
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: var(--radius-sm, 8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  padding: 0.85rem 1rem;
+  display: none;
+  font-family: var(--font);
+  transition: opacity 0.2s ease;
+}
+
+.sentence-trans-popup.visible {
+  display: block;
+}
+
+.trans-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border, #334155);
+}
+
+.trans-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--accent, #6366f1);
+}
+
+.trans-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.trans-close:hover {
+  color: var(--text, #f8fafc);
+}
+
+.trans-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.trans-row {
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: var(--text, #f8fafc);
+}
+
+.trans-row.en {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+.trans-flag {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
 @media (max-width: 600px) {
   .app {
     padding: 1.25rem 1rem 3rem;

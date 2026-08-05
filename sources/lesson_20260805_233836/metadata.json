@@ -1,0 +1,521 @@
+{
+  "text": "Vorige zaterdag ging ik met mijn zus naar de markt. Het weer was zonnig, maar niet te warm. We kochten verse groenten, aardbeien en een groot brood. Daarna dronken we koffie op een klein terras naast het plein. Er waren veel mensen en een muzikant speelde gitaar. Mijn zus wilde ook bloemen kopen voor onze moeder. Ze koos een boeket met gele en witte bloemen. Rond twaalf uur namen we de bus naar huis. In de middag maakten we samen soep en broodjes. De maaltijd was eenvoudig, maar erg lekker. ’s Avonds keken we naar een film en aten we de laatste aardbeien.",
+  "voice": "nl-BE-DenaNeural",
+  "word_boundaries": [
+    {
+      "text": "Vorige",
+      "start": 0.1,
+      "duration": 0.45
+    },
+    {
+      "text": "zaterdag",
+      "start": 0.625,
+      "duration": 0.5375
+    },
+    {
+      "text": "ging",
+      "start": 1.1625,
+      "duration": 0.175
+    },
+    {
+      "text": "ik",
+      "start": 1.3375,
+      "duration": 0.1125
+    },
+    {
+      "text": "met",
+      "start": 1.4875,
+      "duration": 0.1375
+    },
+    {
+      "text": "mijn",
+      "start": 1.6625,
+      "duration": 0.2125
+    },
+    {
+      "text": "zus",
+      "start": 1.9125,
+      "duration": 0.2625
+    },
+    {
+      "text": "naar",
+      "start": 2.1875,
+      "duration": 0.1375
+    },
+    {
+      "text": "de",
+      "start": 2.375,
+      "duration": 0.05
+    },
+    {
+      "text": "markt",
+      "start": 2.4375,
+      "duration": 0.4
+    },
+    {
+      "text": "Het",
+      "start": 3.6875,
+      "duration": 0.1625
+    },
+    {
+      "text": "weer",
+      "start": 3.875,
+      "duration": 0.2125
+    },
+    {
+      "text": "was",
+      "start": 4.1,
+      "duration": 0.2
+    },
+    {
+      "text": "zonnig",
+      "start": 4.3125,
+      "duration": 0.4125
+    },
+    {
+      "text": "maar",
+      "start": 4.925,
+      "duration": 0.2375
+    },
+    {
+      "text": "niet",
+      "start": 5.1625,
+      "duration": 0.2125
+    },
+    {
+      "text": "te",
+      "start": 5.375,
+      "duration": 0.0625
+    },
+    {
+      "text": "warm",
+      "start": 5.45,
+      "duration": 0.325
+    },
+    {
+      "text": "We",
+      "start": 6.6125,
+      "duration": 0.1125
+    },
+    {
+      "text": "kochten",
+      "start": 6.8,
+      "duration": 0.25
+    },
+    {
+      "text": "verse",
+      "start": 7.075,
+      "duration": 0.2875
+    },
+    {
+      "text": "groenten",
+      "start": 7.3875,
+      "duration": 0.4875
+    },
+    {
+      "text": "aardbeien",
+      "start": 8.125,
+      "duration": 0.6
+    },
+    {
+      "text": "en",
+      "start": 8.75,
+      "duration": 0.0875
+    },
+    {
+      "text": "een",
+      "start": 8.8375,
+      "duration": 0.075
+    },
+    {
+      "text": "groot",
+      "start": 8.95,
+      "duration": 0.2875
+    },
+    {
+      "text": "brood",
+      "start": 9.3,
+      "duration": 0.375
+    },
+    {
+      "text": "Daarna",
+      "start": 10.55,
+      "duration": 0.475
+    },
+    {
+      "text": "dronken",
+      "start": 11.0875,
+      "duration": 0.25
+    },
+    {
+      "text": "we",
+      "start": 11.3625,
+      "duration": 0.0625
+    },
+    {
+      "text": "koffie",
+      "start": 11.5,
+      "duration": 0.3125
+    },
+    {
+      "text": "op",
+      "start": 11.8625,
+      "duration": 0.1375
+    },
+    {
+      "text": "een",
+      "start": 12.0,
+      "duration": 0.0875
+    },
+    {
+      "text": "klein",
+      "start": 12.125,
+      "duration": 0.275
+    },
+    {
+      "text": "terras",
+      "start": 12.4,
+      "duration": 0.3375
+    },
+    {
+      "text": "naast",
+      "start": 12.75,
+      "duration": 0.2875
+    },
+    {
+      "text": "het",
+      "start": 13.0375,
+      "duration": 0.075
+    },
+    {
+      "text": "plein",
+      "start": 13.175,
+      "duration": 0.3375
+    },
+    {
+      "text": "Er",
+      "start": 14.3375,
+      "duration": 0.1375
+    },
+    {
+      "text": "waren",
+      "start": 14.5,
+      "duration": 0.25
+    },
+    {
+      "text": "veel",
+      "start": 14.775,
+      "duration": 0.2375
+    },
+    {
+      "text": "mensen",
+      "start": 15.025,
+      "duration": 0.375
+    },
+    {
+      "text": "en",
+      "start": 15.4625,
+      "duration": 0.0875
+    },
+    {
+      "text": "een",
+      "start": 15.55,
+      "duration": 0.075
+    },
+    {
+      "text": "muzikant",
+      "start": 15.65,
+      "duration": 0.4875
+    },
+    {
+      "text": "speelde",
+      "start": 16.2,
+      "duration": 0.3125
+    },
+    {
+      "text": "gitaar",
+      "start": 16.5125,
+      "duration": 0.5125
+    },
+    {
+      "text": "Mijn",
+      "start": 17.85,
+      "duration": 0.2875
+    },
+    {
+      "text": "zus",
+      "start": 18.175,
+      "duration": 0.225
+    },
+    {
+      "text": "wilde",
+      "start": 18.4,
+      "duration": 0.2625
+    },
+    {
+      "text": "ook",
+      "start": 18.725,
+      "duration": 0.15
+    },
+    {
+      "text": "bloemen",
+      "start": 18.9375,
+      "duration": 0.225
+    },
+    {
+      "text": "kopen",
+      "start": 19.2375,
+      "duration": 0.225
+    },
+    {
+      "text": "voor",
+      "start": 19.475,
+      "duration": 0.2
+    },
+    {
+      "text": "onze",
+      "start": 19.7,
+      "duration": 0.25
+    },
+    {
+      "text": "moeder",
+      "start": 19.975,
+      "duration": 0.3375
+    },
+    {
+      "text": "Ze",
+      "start": 21.1375,
+      "duration": 0.1375
+    },
+    {
+      "text": "koos",
+      "start": 21.35,
+      "duration": 0.2375
+    },
+    {
+      "text": "een",
+      "start": 21.5875,
+      "duration": 0.025
+    },
+    {
+      "text": "boeket",
+      "start": 21.6875,
+      "duration": 0.3125
+    },
+    {
+      "text": "met",
+      "start": 22.025,
+      "duration": 0.1375
+    },
+    {
+      "text": "gele",
+      "start": 22.1625,
+      "duration": 0.375
+    },
+    {
+      "text": "en",
+      "start": 22.5625,
+      "duration": 0.1
+    },
+    {
+      "text": "witte",
+      "start": 22.7125,
+      "duration": 0.2
+    },
+    {
+      "text": "bloemen",
+      "start": 22.975,
+      "duration": 0.35
+    },
+    {
+      "text": "Rond",
+      "start": 24.15,
+      "duration": 0.2625
+    },
+    {
+      "text": "twaalf",
+      "start": 24.4375,
+      "duration": 0.375
+    },
+    {
+      "text": "uur",
+      "start": 24.8625,
+      "duration": 0.225
+    },
+    {
+      "text": "namen",
+      "start": 25.0875,
+      "duration": 0.275
+    },
+    {
+      "text": "we",
+      "start": 25.3875,
+      "duration": 0.0625
+    },
+    {
+      "text": "de",
+      "start": 25.475,
+      "duration": 0.05
+    },
+    {
+      "text": "bus",
+      "start": 25.5875,
+      "duration": 0.225
+    },
+    {
+      "text": "naar",
+      "start": 25.825,
+      "duration": 0.15
+    },
+    {
+      "text": "huis",
+      "start": 25.975,
+      "duration": 0.45
+    },
+    {
+      "text": "In",
+      "start": 27.325,
+      "duration": 0.0875
+    },
+    {
+      "text": "de",
+      "start": 27.45,
+      "duration": 0.05
+    },
+    {
+      "text": "middag",
+      "start": 27.5125,
+      "duration": 0.3375
+    },
+    {
+      "text": "maakten",
+      "start": 27.875,
+      "duration": 0.275
+    },
+    {
+      "text": "we",
+      "start": 28.1625,
+      "duration": 0.075
+    },
+    {
+      "text": "samen",
+      "start": 28.35,
+      "duration": 0.2625
+    },
+    {
+      "text": "soep",
+      "start": 28.7125,
+      "duration": 0.1875
+    },
+    {
+      "text": "en",
+      "start": 28.95,
+      "duration": 0.075
+    },
+    {
+      "text": "broodjes",
+      "start": 29.1,
+      "duration": 0.55
+    },
+    {
+      "text": "De",
+      "start": 30.525,
+      "duration": 0.0875
+    },
+    {
+      "text": "maaltijd",
+      "start": 30.6375,
+      "duration": 0.5125
+    },
+    {
+      "text": "was",
+      "start": 31.175,
+      "duration": 0.175
+    },
+    {
+      "text": "eenvoudig",
+      "start": 31.375,
+      "duration": 0.6625
+    },
+    {
+      "text": "maar",
+      "start": 32.2625,
+      "duration": 0.2375
+    },
+    {
+      "text": "erg",
+      "start": 32.525,
+      "duration": 0.25
+    },
+    {
+      "text": "lekker",
+      "start": 32.7875,
+      "duration": 0.3875
+    },
+    {
+      "text": "s",
+      "start": 34.0375,
+      "duration": 0.1875
+    },
+    {
+      "text": "Avonds",
+      "start": 34.275,
+      "duration": 0.4375
+    },
+    {
+      "text": "keken",
+      "start": 34.7625,
+      "duration": 0.2
+    },
+    {
+      "text": "we",
+      "start": 34.9875,
+      "duration": 0.0875
+    },
+    {
+      "text": "naar",
+      "start": 35.0875,
+      "duration": 0.1625
+    },
+    {
+      "text": "een",
+      "start": 35.2625,
+      "duration": 0.075
+    },
+    {
+      "text": "film",
+      "start": 35.4375,
+      "duration": 0.2875
+    },
+    {
+      "text": "en",
+      "start": 35.7625,
+      "duration": 0.125
+    },
+    {
+      "text": "aten",
+      "start": 35.95,
+      "duration": 0.2375
+    },
+    {
+      "text": "we",
+      "start": 36.2,
+      "duration": 0.075
+    },
+    {
+      "text": "de",
+      "start": 36.3,
+      "duration": 0.05
+    },
+    {
+      "text": "laatste",
+      "start": 36.3625,
+      "duration": 0.3625
+    },
+    {
+      "text": "aardbeien",
+      "start": 36.7625,
+      "duration": 0.6
+    }
+  ]
+}
